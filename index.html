@@ -345,7 +345,7 @@ async function loadData(){
   try{
     const { data, error } = await db.from("alumnos").select("*").order("nombre");
     if(error) throw error;
-    students = (data||[]).map(r => ({ id: r.id, nombre: r.nombre, fecha_ingreso: r.fecha_ingreso, pin: r.pin || "" }));
+    students = (data||[]).map(r => ({ id: r.id, nombre: r.nombre, pin: r.pin || "" }));
   }catch(e){ console.error(e); students = []; toast("No se pudo conectar con Supabase"); }
   try{
     const { data, error } = await db.from("ejercicios").select("*").order("nombre");
@@ -361,7 +361,7 @@ async function loadData(){
 // directamente el botón "Eliminar alumno".
 async function saveStudents(){
   if(!students.length) return;
-  const rows = students.map(s => ({ id: s.id, nombre: s.nombre, fecha_ingreso: s.fecha_ingreso, pin: s.pin || null }));
+  const rows = students.map(s => ({ id: s.id, nombre: s.nombre, pin: s.pin || null }));
   const { error } = await db.from("alumnos").upsert(rows);
   if(error){ console.error(error); toast("Error al guardar alumno"); }
 }
@@ -496,9 +496,8 @@ function exportPDF(st, sortedLogs){
   doc.text("KarFit - Historial de " + st.nombre, 14, 18);
   doc.setFontSize(10);
   doc.setTextColor(120);
-  doc.text("Fecha de ingreso: " + fmtDate(st.fecha_ingreso), 14, 25);
   doc.autoTable({
-    startY: 32,
+    startY: 25,
     head: [["Fecha","Ejercicio","Peso (kg)","Repeticiones"]],
     body: sortedLogs.map(l => [fmtDate(l.fecha), l.ejercicio, String(l.peso), String(l.reps)]),
     headStyles: { fillColor: [30,35,41] },
@@ -539,8 +538,7 @@ function renderTrainerList(){
     + '<div style="display:flex;gap:8px;"><button class="btn ghost" id="manage-ex">Ejercicios</button><button class="btn" id="add-student">+ Nuevo alumno</button></div></div>'
     + '<div class="card" id="add-card" style="display:none;">'
     + '<div class="row">'
-    + '<div class="field"><label>Nombre y apellido</label><input id="new-name" placeholder="Ej: Juan Pérez"></div>'
-    + '<div class="field"><label>Fecha de ingreso</label><input id="new-date" type="date"></div>'
+    + '<div class="field"><label>Nombre</label><input id="new-name" placeholder="Ej: Juan Pérez"></div>'
     + '<div class="field"><label>PIN de acceso (4 dígitos)</label><input id="new-pin" maxlength="4" placeholder="Se genera solo si lo dejás vacío"></div>'
     + '</div>'
     + '<button class="btn" id="save-student">Guardar alumno</button>'
@@ -548,7 +546,7 @@ function renderTrainerList(){
     + '<div class="card">'
     + (rows.length ? rows.map(s => ''
         + '<div class="student-row" data-id="'+s.id+'">'
-        + '<div><div class="name">'+escapeHtml(s.nombre)+'</div><div class="meta">Ingresó '+fmtDate(s.fecha_ingreso)+'</div></div>'
+        + '<div><div class="name">'+escapeHtml(s.nombre)+'</div></div>'
         + '<div class="meta">Ver ficha &rarr;</div>'
         + '</div>'
       ).join("") : '<div class="empty">Todavía no cargaste alumnos.</div>')
@@ -561,12 +559,11 @@ function renderTrainerList(){
   };
   document.getElementById("save-student").onclick = async ()=>{
     const nombre = document.getElementById("new-name").value.trim();
-    const fecha = document.getElementById("new-date").value;
     let pin = document.getElementById("new-pin").value.trim();
-    if(!nombre || !fecha){ toast("Completá nombre y fecha"); return; }
+    if(!nombre){ toast("Completá el nombre"); return; }
     if(pin && !/^\d{4}$/.test(pin)){ toast("El PIN debe tener 4 números"); return; }
     if(!pin) pin = randomPin();
-    students.push({id: uid(), nombre, fecha_ingreso: fecha, pin});
+    students.push({id: uid(), nombre, pin});
     await saveStudents();
     toast("Alumno agregado · PIN: " + pin);
     render();
@@ -646,7 +643,7 @@ async function renderTrainerDetail(){
     + '<div class="top"><div><div class="tag">FICHA DE ALUMNO</div><h1>'+escapeHtml(st.nombre)+'</h1></div>'
     + '<button class="btn ghost small" id="del-student">Eliminar alumno</button></div>'
     + '<div class="card">'
-    + '<div class="meta" style="margin-bottom:10px;">Fecha de ingreso: '+fmtDate(st.fecha_ingreso)+' · '+data.length+' registros cargados</div>'
+    + '<div class="meta" style="margin-bottom:10px;">'+data.length+' registros cargados</div>'
     + '<div class="row" style="align-items:center;">'
     + '<div class="field" style="max-width:160px;"><label>PIN de acceso</label><input id="edit-pin" maxlength="4" value="'+(st.pin||'')+'"></div>'
     + '<div class="field" style="flex:0;align-self:flex-end;"><button class="btn ghost small" id="save-pin">Actualizar PIN</button></div>'
