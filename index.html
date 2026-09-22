@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="icon" href="data:,">
 <title>KarFit - Registro de Entrenamiento</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -291,52 +292,282 @@
   }
 
 
-/* ---------- MOBILE ONLY ---------- */
-@media (max-width: 600px){
-  html,body{width:100%;overflow-x:hidden;}
-  body{font-size:14px;-webkit-text-size-adjust:100%;}
-  .app{width:100%;max-width:none;margin:0;padding:18px 14px 48px;}
-  .top{display:flex;align-items:flex-start;gap:12px;margin-bottom:18px;}
-  .top h1{font-size:21px;line-height:1.15;}
-  .top .tag{font-size:10px;}
-  .logo-banner{margin-left:-14px;margin-right:-14px;margin-bottom:18px;}
-  .logo-banner img{display:block;width:100%;height:auto;max-height:180px;object-fit:cover;}
-  .card{padding:16px;border-radius:10px;}
-  .role-pick{grid-template-columns:1fr;gap:12px;}
-  .role-card{min-height:110px;padding:18px;}
-  .role-card h3{font-size:19px;}
-  .role-card .big{font-size:13px;}
-  .btn{min-height:44px;padding:11px 15px;font-size:14px;}
-  .btn.small{min-height:40px;padding:9px 12px;}
-  input,select,textarea{width:100%;min-height:44px;font-size:16px;}
-  .form-grid,.grid-2,.grid-3,.grid-4{grid-template-columns:1fr !important;}
-  .form-row{flex-direction:column;align-items:stretch;gap:10px;}
-  .form-row>*{width:100% !important;}
-  .actions,.row-actions{display:flex;flex-wrap:wrap;gap:8px;}
-  .actions .btn,.row-actions .btn,.row-actions .icon-btn{flex:1 1 auto;min-height:44px;}
-  .back{display:inline-block;padding:8px 0;margin-bottom:12px;}
-  table{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;font-size:13px;}
-  table th,table td{white-space:nowrap;padding:9px 8px;}
-  .history-table, .logs-table{overflow:visible;}
-  .chart-wrap,canvas{max-width:100% !important;}
-  .stats{grid-template-columns:1fr 1fr !important;gap:8px;}
-  .stat{padding:12px;}
-  .stat .value{font-size:20px;}
-  .student-grid{grid-template-columns:1fr !important;}
-  .exercise-grid{grid-template-columns:1fr !important;}
-  .modal{width:calc(100% - 28px);max-width:none;margin:14px;}
-  .modal-body{max-height:80vh;overflow:auto;}
-  .toast{left:14px;right:14px;bottom:18px;width:auto;}
-}
+  /* =========================================================
+     KARFIT — MOBILE ONLY
+     These rules apply only to screens up to 600px.
+     Desktop/PC styles above remain unchanged.
+     ========================================================= */
+  @media screen and (max-width: 600px){
+    html{
+      width:100%;
+      overflow-x:hidden;
+      -webkit-text-size-adjust:100%;
+    }
 
-@media (max-width: 380px){
-  .app{padding-left:11px;padding-right:11px;}
-  .logo-banner{margin-left:-11px;margin-right:-11px;}
-  .top h1{font-size:19px;}
-  .stats{grid-template-columns:1fr !important;}
-  .card{padding:13px;}
-  table th,table td{padding:8px 6px;}
-}
+    body{
+      width:100%;
+      min-width:0;
+      overflow-x:hidden;
+    }
+
+    .app{
+      width:100%;
+      max-width:none;
+      margin:0;
+      padding:16px 12px 48px;
+    }
+
+    .top{
+      margin-bottom:16px;
+      gap:8px;
+      align-items:center;
+    }
+
+    .top h1{font-size:21px;}
+    .top .tag{font-size:10px;}
+
+    .card{
+      width:100%;
+      padding:16px;
+      margin-bottom:12px;
+      border-radius:10px;
+    }
+
+    .logo-banner{
+      width:100%;
+      overflow:hidden;
+      border-radius:10px;
+    }
+
+    .logo-banner img{
+      display:block;
+      width:100%;
+      max-width:100%;
+      height:auto;
+      object-fit:cover;
+    }
+
+    h1{font-size:24px;}
+    h2{font-size:21px;}
+    h3{font-size:17px;}
+
+    .btn{
+      min-height:44px;
+      padding:10px 14px;
+      font-size:14px;
+      touch-action:manipulation;
+    }
+
+    .btn.small{
+      min-height:42px;
+      padding:9px 12px;
+      font-size:12px;
+    }
+
+    input, select, textarea{
+      width:100%;
+      min-width:0;
+      min-height:44px;
+      font-size:16px;
+      padding:10px 12px;
+    }
+
+    textarea{min-height:90px;}
+
+    .row{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .row > .field{
+      width:100%;
+      min-width:0;
+    }
+
+    .field{width:100%;}
+
+    .section-header{
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:flex-start;
+    }
+
+    .section-header h3.section-title{
+      font-size:17px;
+      line-height:1.2;
+    }
+
+    /* Role selection */
+    .role-pick{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .role-card{
+      width:100%;
+      min-height:90px;
+      padding:16px;
+    }
+
+    .role-card .big{font-size:20px;}
+
+    /* Categories */
+    .cat-pick{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .cat-card{
+      min-width:0;
+      min-height:76px;
+      padding:12px 8px;
+    }
+
+    /* Student list */
+    .student-row{
+      min-height:58px;
+      padding:12px 10px;
+      gap:8px;
+    }
+
+    .student-row .name{
+      min-width:0;
+      overflow-wrap:anywhere;
+    }
+
+    .meta{
+      font-size:12px;
+    }
+
+    /* Tables: preserve all data but prevent the page itself from overflowing. */
+    .card:has(table){
+      overflow:hidden;
+    }
+
+    table{
+      width:100%;
+      min-width:0;
+      font-size:12px;
+    }
+
+    th, td{
+      padding:8px 6px;
+      word-break:break-word;
+    }
+
+    /* When a table has many columns, scroll only the table area. */
+    table{
+      display:block;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+    }
+
+    table thead, table tbody{
+      width:max-content;
+      min-width:100%;
+    }
+
+    .row-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+    }
+
+    .icon-btn{
+      min-height:40px;
+      min-width:70px;
+      padding:8px 10px;
+      font-size:12px;
+      touch-action:manipulation;
+    }
+
+    .edit-input{
+      min-height:44px;
+      font-size:16px;
+    }
+
+    /* Today's exercises */
+    .today-item{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      align-items:center;
+    }
+
+    .exercise-list-item{
+      padding:12px 10px;
+    }
+
+    /* Max records */
+    .max-input{
+      min-height:44px;
+      font-size:16px;
+    }
+
+    /* Progress chart */
+    .chart-wrap{
+      width:100%;
+      max-width:100%;
+      overflow:hidden;
+    }
+
+    .chart-wrap canvas,
+    canvas{
+      max-width:100% !important;
+    }
+
+    /* PIN */
+    .pin-box{
+      width:100%;
+      max-width:100%;
+    }
+
+    .pin-display{
+      font-size:24px;
+      letter-spacing:5px;
+    }
+
+    /* Back button / navigation */
+    .back{
+      min-height:44px;
+      padding:10px 4px;
+    }
+
+    /* Toast */
+    .toast{
+      left:12px;
+      right:12px;
+      bottom:16px;
+      width:auto;
+      max-width:none;
+      text-align:center;
+    }
+
+    /* Loading */
+    .loading{
+      width:100%;
+      text-align:center;
+      padding:24px 12px;
+    }
+  }
+
+  @media screen and (max-width: 380px){
+    .app{padding-left:9px;padding-right:9px;}
+    .card{padding:13px;}
+    .top h1{font-size:19px;}
+    .top .tag{font-size:9px;}
+
+    .cat-pick{grid-template-columns:1fr;}
+
+    .btn{font-size:13px;}
+    .icon-btn{min-width:64px;padding-left:8px;padding-right:8px;}
+
+    th, td{padding:7px 5px;font-size:11px;}
+  }
+
 </style>
 </head>
 <body>
