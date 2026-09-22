@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" href="data:,">
 <title>KarFit - Registro de Entrenamiento</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -341,18 +342,56 @@ function randomPin(){
 /* ---------- STORAGE ---------- */
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+async function withTimeout(promise, ms = 10000){
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error("Timeout: Supabase no respondió a tiempo")), ms);
+  });
+  try{
+    return await Promise.race([promise, timeout]);
+  }finally{
+    clearTimeout(timer);
+  }
+}
+
 async function loadData(){
+  // Renderizamos inmediatamente la pantalla inicial. La carga de Supabase
+  // ocurre después y nunca debe dejar la aplicación bloqueada en "Cargando".
+  render();
+
   try{
-    const { data, error } = await db.from("alumnos").select("*").order("nombre");
+    const { data, error } = await withTimeout(
+      db.from("alumnos").select("id,nombre,pin").order("nombre"),
+      10000
+    );
     if(error) throw error;
-    students = (data||[]).map(r => ({ id: r.id, nombre: r.nombre, pin: r.pin || "" }));
-  }catch(e){ console.error(e); students = []; toast("No se pudo conectar con Supabase"); }
+    students = (data || []).map(r => ({
+      id: r.id,
+      nombre: r.nombre,
+      pin: r.pin || ""
+    }));
+  }catch(e){
+    console.error("Error cargando alumnos desde Supabase:", e);
+    students = [];
+    toast("No se pudieron cargar los alumnos");
+  }
+
   try{
-    const { data, error } = await db.from("ejercicios").select("*").order("nombre");
+    const { data, error } = await withTimeout(
+      db.from("ejercicios").select("nombre,categoria").order("nombre"),
+      10000
+    );
     if(error) throw error;
     exercises = { superior: [], inferior: [] };
-    (data||[]).forEach(r => { if(exercises[r.categoria]) exercises[r.categoria].push(r.nombre); });
-  }catch(e){ console.error(e); exercises = JSON.parse(JSON.stringify(DEFAULT_EXERCISES)); }
+    (data || []).forEach(r => {
+      if(exercises[r.categoria]) exercises[r.categoria].push(r.nombre);
+    });
+  }catch(e){
+    console.error("Error cargando ejercicios desde Supabase:", e);
+    exercises = JSON.parse(JSON.stringify(DEFAULT_EXERCISES));
+  }
+
+  // Siempre renderizamos al finalizar, incluso si Supabase devolvió un error.
   render();
 }
 
@@ -898,4 +937,15 @@ async function renderStudentHome(){
     };
   }
   const chartSel = document.getElementById("chart-ex-select");
-  if
+  if(chartSel){ chartSel.onchange = (e)=>{ state.chartExercise = e.target.value; render(); }; }
+
+  const expPdf = document.getElementById("exp-pdf");
+  if(expPdf){ expPdf.onclick = ()=> exportPDF(st, sorted); }
+  const expXlsx = document.getElementById("exp-xlsx");
+  if(expXlsx){ expXlsx.onclick = ()=> exportExcel(st, sorted); }
+}
+
+loadData();
+</script>
+</body>
+</html>
