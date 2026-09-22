@@ -360,10 +360,15 @@ async function loadData(){
 // No borra alumnos que ya no están en el array local: eso lo hace
 // directamente el botón "Eliminar alumno".
 async function saveStudents(){
-  if(!students.length) return;
+  if(!students.length) return true;
   const rows = students.map(s => ({ id: s.id, nombre: s.nombre, pin: s.pin || null }));
   const { error } = await db.from("alumnos").upsert(rows);
-  if(error){ console.error(error); toast("Error al guardar alumno"); }
+  if(error){
+    console.error("Error al guardar alumnos en Supabase:", error);
+    toast("Error al guardar alumno en Supabase");
+    return false;
+  }
+  return true;
 }
 
 async function saveExercises(){
@@ -429,7 +434,7 @@ async function saveComments(studentId, arr){
   if(error){ console.error(error); toast("Error al guardar el comentario"); }
 }
 
-function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function uid(){ return crypto.randomUUID(); }
 function escapeHtml(s){
   return (s||"").toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
@@ -538,7 +543,7 @@ function renderTrainerList(){
     + '<div style="display:flex;gap:8px;"><button class="btn ghost" id="manage-ex">Ejercicios</button><button class="btn" id="add-student">+ Nuevo alumno</button></div></div>'
     + '<div class="card" id="add-card" style="display:none;">'
     + '<div class="row">'
-    + '<div class="field"><label>Nombre</label><input id="new-name" placeholder="Ej: Juan Pérez"></div>'
+    + '<div class="field"><label>Nombre y apellido</label><input id="new-name" placeholder="Ej: Juan Pérez"></div>'
     + '<div class="field"><label>PIN de acceso (4 dígitos)</label><input id="new-pin" maxlength="4" placeholder="Se genera solo si lo dejás vacío"></div>'
     + '</div>'
     + '<button class="btn" id="save-student">Guardar alumno</button>'
@@ -563,8 +568,18 @@ function renderTrainerList(){
     if(!nombre){ toast("Completá el nombre"); return; }
     if(pin && !/^\d{4}$/.test(pin)){ toast("El PIN debe tener 4 números"); return; }
     if(!pin) pin = randomPin();
-    students.push({id: uid(), nombre, pin});
-    await saveStudents();
+    const newStudent = {id: uid(), nombre, pin};
+    const { error } = await db.from("alumnos").insert({
+      id: newStudent.id,
+      nombre: newStudent.nombre,
+      pin: newStudent.pin || null
+    });
+    if(error){
+      console.error("Error al crear alumno:", error);
+      toast("No se pudo guardar el alumno en Supabase");
+      return;
+    }
+    students.push(newStudent);
     toast("Alumno agregado · PIN: " + pin);
     render();
   };
@@ -883,15 +898,4 @@ async function renderStudentHome(){
     };
   }
   const chartSel = document.getElementById("chart-ex-select");
-  if(chartSel){ chartSel.onchange = (e)=>{ state.chartExercise = e.target.value; render(); }; }
-
-  const expPdf = document.getElementById("exp-pdf");
-  if(expPdf){ expPdf.onclick = ()=> exportPDF(st, sorted); }
-  const expXlsx = document.getElementById("exp-xlsx");
-  if(expXlsx){ expXlsx.onclick = ()=> exportExcel(st, sorted); }
-}
-
-loadData();
-</script>
-</body>
-</html>
+  if
