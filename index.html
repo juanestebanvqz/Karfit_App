@@ -289,6 +289,54 @@
     letter-spacing:.08em;
     color:var(--accent);
   }
+
+
+/* ---------- MOBILE ONLY ---------- */
+@media (max-width: 600px){
+  html,body{width:100%;overflow-x:hidden;}
+  body{font-size:14px;-webkit-text-size-adjust:100%;}
+  .app{width:100%;max-width:none;margin:0;padding:18px 14px 48px;}
+  .top{display:flex;align-items:flex-start;gap:12px;margin-bottom:18px;}
+  .top h1{font-size:21px;line-height:1.15;}
+  .top .tag{font-size:10px;}
+  .logo-banner{margin-left:-14px;margin-right:-14px;margin-bottom:18px;}
+  .logo-banner img{display:block;width:100%;height:auto;max-height:180px;object-fit:cover;}
+  .card{padding:16px;border-radius:10px;}
+  .role-pick{grid-template-columns:1fr;gap:12px;}
+  .role-card{min-height:110px;padding:18px;}
+  .role-card h3{font-size:19px;}
+  .role-card .big{font-size:13px;}
+  .btn{min-height:44px;padding:11px 15px;font-size:14px;}
+  .btn.small{min-height:40px;padding:9px 12px;}
+  input,select,textarea{width:100%;min-height:44px;font-size:16px;}
+  .form-grid,.grid-2,.grid-3,.grid-4{grid-template-columns:1fr !important;}
+  .form-row{flex-direction:column;align-items:stretch;gap:10px;}
+  .form-row>*{width:100% !important;}
+  .actions,.row-actions{display:flex;flex-wrap:wrap;gap:8px;}
+  .actions .btn,.row-actions .btn,.row-actions .icon-btn{flex:1 1 auto;min-height:44px;}
+  .back{display:inline-block;padding:8px 0;margin-bottom:12px;}
+  table{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;font-size:13px;}
+  table th,table td{white-space:nowrap;padding:9px 8px;}
+  .history-table, .logs-table{overflow:visible;}
+  .chart-wrap,canvas{max-width:100% !important;}
+  .stats{grid-template-columns:1fr 1fr !important;gap:8px;}
+  .stat{padding:12px;}
+  .stat .value{font-size:20px;}
+  .student-grid{grid-template-columns:1fr !important;}
+  .exercise-grid{grid-template-columns:1fr !important;}
+  .modal{width:calc(100% - 28px);max-width:none;margin:14px;}
+  .modal-body{max-height:80vh;overflow:auto;}
+  .toast{left:14px;right:14px;bottom:18px;width:auto;}
+}
+
+@media (max-width: 380px){
+  .app{padding-left:11px;padding-right:11px;}
+  .logo-banner{margin-left:-11px;margin-right:-11px;}
+  .top h1{font-size:19px;}
+  .stats{grid-template-columns:1fr !important;}
+  .card{padding:13px;}
+  table th,table td{padding:8px 6px;}
+}
 </style>
 </head>
 <body>
