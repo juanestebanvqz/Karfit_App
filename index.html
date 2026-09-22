@@ -912,8 +912,26 @@ async function renderStudentHome(){
     + '<div class="card"><div class="section-header"><h3 class="section-title">Mi historial completo</h3>'
     + (sorted.length ? '<div style="display:flex;gap:8px;"><button class="btn ghost small" id="exp-pdf">Exportar PDF</button><button class="btn ghost small" id="exp-xlsx">Exportar Excel</button></div>' : '')
     + '</div>'
-    + (sorted.length ? '<table><tr><th>Fecha</th><th>Ejercicio</th><th>Peso</th><th>Reps</th></tr>'
-        + sorted.map(l=>'<tr><td>'+fmtDate(l.fecha)+'</td><td>'+escapeHtml(l.ejercicio)+'</td><td>'+l.peso+' kg</td><td>'+l.reps+'</td></tr>').join("")
+    + (sorted.length ? '<table><tr><th>Fecha</th><th>Ejercicio</th><th>Peso</th><th>Reps</th><th>Acción</th></tr>'
+        + sorted.map(l=>{
+            if(state.studentEditingLogId === l.id){
+              const exerciseOptions = Array.from(new Set(exercises.superior.concat(exercises.inferior).concat([l.ejercicio])));
+              return '<tr data-student-log-id="'+l.id+'">'
+                + '<td><input class="edit-input" style="width:118px;" type="date" id="student-edit-fecha" value="'+l.fecha+'"></td>'
+                + '<td><select id="student-edit-ejercicio">'+exerciseOptions.map(ex=>'<option value="'+escapeHtml(ex)+'" '+(ex===l.ejercicio?'selected':'')+'>'+escapeHtml(ex)+'</option>').join("")+'</select></td>'
+                + '<td><input class="edit-input" type="number" min="0" step="0.5" id="student-edit-peso" value="'+l.peso+'"></td>'
+                + '<td><input class="edit-input" type="number" min="1" step="1" id="student-edit-reps" value="'+l.reps+'"></td>'
+                + '<td><div class="row-actions"><button class="icon-btn" id="student-edit-save">Guardar</button><button class="icon-btn" id="student-edit-cancel">Cancelar</button></div></td>'
+                + '</tr>';
+            }
+            return '<tr data-student-log-id="'+l.id+'">'
+              + '<td>'+fmtDate(l.fecha)+'</td>'
+              + '<td>'+escapeHtml(l.ejercicio)+'</td>'
+              + '<td>'+l.peso+' kg</td>'
+              + '<td>'+l.reps+'</td>'
+              + '<td><div class="row-actions"><button class="icon-btn edit-student-log" data-id="'+l.id+'">Editar</button><button class="icon-btn del del-student-log" data-id="'+l.id+'">Borrar</button></div></td>'
+              + '</tr>';
+          }).join("")
         + '</table>' : '<div class="empty">Todavía no cargaste ningún entrenamiento.</div>')
     + '</div>';
 
@@ -936,6 +954,65 @@ async function renderStudentHome(){
       render();
     };
   }
+  app.querySelectorAll(".edit-student-log").forEach(btn=>{
+    btn.onclick = ()=>{
+      state.studentEditingLogId = btn.dataset.id;
+      renderStudentHome();
+    };
+  });
+
+  app.querySelectorAll(".del-student-log").forEach(btn=>{
+    btn.onclick = async ()=>{
+      const registro = data.find(l => l.id === btn.dataset.id);
+      if(!registro) return;
+
+      const confirmar = confirm(
+        "¿Querés borrar este registro?\n\n" +
+        registro.ejercicio + " · " + registro.peso + " kg × " + registro.reps + " reps\n\n" +
+        "Esta acción no se puede deshacer."
+      );
+      if(!confirmar) return;
+
+      const updated = data.filter(l => l.id !== btn.dataset.id);
+      await saveLogs(st.id, updated);
+      state.studentEditingLogId = null;
+      toast("Registro eliminado ✓");
+      renderStudentHome();
+    };
+  });
+
+  const studentEditSave = document.getElementById("student-edit-save");
+  if(studentEditSave){
+    studentEditSave.onclick = async ()=>{
+      const fecha = document.getElementById("student-edit-fecha").value;
+      const ejercicio = document.getElementById("student-edit-ejercicio").value;
+      const peso = parseFloat(document.getElementById("student-edit-peso").value);
+      const reps = parseInt(document.getElementById("student-edit-reps").value);
+      if(!fecha || !ejercicio || isNaN(peso) || isNaN(reps) || peso < 0 || reps < 1){
+        toast("Completá correctamente todos los campos");
+        return;
+      }
+
+      const updated = data.map(l => l.id === state.studentEditingLogId
+        ? Object.assign({}, l, { fecha, ejercicio, peso, reps })
+        : l
+      );
+
+      await saveLogs(st.id, updated);
+      state.studentEditingLogId = null;
+      toast("Registro actualizado ✓");
+      renderStudentHome();
+    };
+  }
+
+  const studentEditCancel = document.getElementById("student-edit-cancel");
+  if(studentEditCancel){
+    studentEditCancel.onclick = ()=>{
+      state.studentEditingLogId = null;
+      renderStudentHome();
+    };
+  }
+
   const chartSel = document.getElementById("chart-ex-select");
   if(chartSel){ chartSel.onchange = (e)=>{ state.chartExercise = e.target.value; render(); }; }
 
