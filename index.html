@@ -291,6 +291,15 @@
     color:var(--accent);
   }
 
+  /* Historial Completo: aire entre Fecha y Ejercicio */
+  .student-history-card .history-date{
+    padding-right:16px;
+    white-space:nowrap;
+  }
+  .student-history-card .history-exercise{
+    padding-left:8px;
+  }
+
   /* ===== AJUSTES EXCLUSIVOS PARA MÓVIL ===== */
   @media screen and (max-width: 600px){
     html{width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%;}
@@ -337,9 +346,9 @@
       word-break:normal;
     }
     .student-history-card th:nth-child(1),
-    .student-history-card td:nth-child(1){width:22%;white-space:nowrap;padding-right:10px;}
+    .student-history-card td:nth-child(1){width:22%;white-space:nowrap;padding-right:14px;}
     .student-history-card th:nth-child(2),
-    .student-history-card td:nth-child(2){width:25%;white-space:normal;overflow-wrap:break-word;word-break:normal;}
+    .student-history-card td:nth-child(2){width:25%;white-space:normal;overflow-wrap:break-word;word-break:normal;padding-left:8px;}
     .student-history-card th:nth-child(3),
     .student-history-card td:nth-child(3){width:13%;white-space:nowrap;}
     .student-history-card th:nth-child(4),
@@ -575,6 +584,11 @@ function fmtDate(d){
 function fmtDateShort(d){
   const [y,m,day] = d.split("-");
   return day+"/"+m;
+}
+
+function fmtDateShortYear(d){
+  const [y,m,day] = d.split("-");
+  return day+"/"+m+"/"+y.slice(-2);
 }
 
 /* ---------- CHART ---------- */
@@ -1016,8 +1030,8 @@ async function renderStudentHome(){
                 + '</tr>';
             }
             return '<tr data-student-log-id="'+l.id+'">'
-              + '<td>'+fmtDate(l.fecha)+'</td>'
-              + '<td>'+escapeHtml(l.ejercicio)+'</td>'
+              + '<td class="history-date">'+fmtDateShortYear(l.fecha)+'</td>'
+              + '<td class="history-exercise">'+escapeHtml(l.ejercicio)+'</td>'
               + '<td>'+l.peso+' kg</td>'
               + '<td>'+l.reps+'</td>'
               + '<td><div class="row-actions"><button class="icon-btn edit-student-log" data-id="'+l.id+'">Editar</button><button class="icon-btn del del-student-log" data-id="'+l.id+'">Borrar</button></div></td>'
