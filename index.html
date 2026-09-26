@@ -346,11 +346,11 @@
       word-break:normal;
     }
     .student-history-card th:nth-child(1),
-    .student-history-card td:nth-child(1){width:20%;white-space:nowrap;padding-right:14px;}
+    .student-history-card td:nth-child(1){width:22%;white-space:nowrap;padding-right:14px;}
     .student-history-card th:nth-child(2),
-    .student-history-card td:nth-child(2){width:28%;white-space:normal;overflow-wrap:break-word;word-break:normal;padding-left:8px;}
+    .student-history-card td:nth-child(2){width:25%;white-space:normal;overflow-wrap:break-word;word-break:normal;padding-left:8px;}
     .student-history-card th:nth-child(3),
-    .student-history-card td:nth-child(3){width:12%;white-space:nowrap;}
+    .student-history-card td:nth-child(3){width:13%;white-space:nowrap;}
     .student-history-card th:nth-child(4),
     .student-history-card td:nth-child(4){width:12%;white-space:nowrap;}
     .student-history-card th:nth-child(5),
@@ -442,6 +442,10 @@ function randomPin(){
 /* ---------- STORAGE ---------- */
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// PIN de acceso de la entrenadora. 1090 es el valor por defecto hasta
+// que se cargue (o se cambie) el que está guardado en Supabase.
+let trainerPin = "1090";
+
 async function withTimeout(promise, ms = 10000){
   let timer;
   const timeout = new Promise((_, reject) => {
@@ -491,8 +495,32 @@ async function loadData(){
     exercises = JSON.parse(JSON.stringify(DEFAULT_EXERCISES));
   }
 
+  try{
+    const { data, error } = await withTimeout(
+      db.from("config").select("value").eq("key", "trainer_pin").maybeSingle(),
+      10000
+    );
+    if(error) throw error;
+    if(data && data.value) trainerPin = data.value;
+  }catch(e){
+    console.error("Error cargando el PIN de la entrenadora:", e);
+    // Si la tabla "config" todavía no existe o falla la carga, seguimos
+    // usando el valor por defecto (1090) para no romper el acceso.
+  }
+
   // Siempre renderizamos al finalizar, incluso si Supabase devolvió un error.
   render();
+}
+
+async function saveTrainerPin(newPin){
+  const { error } = await db.from("config").upsert({ key: "trainer_pin", value: newPin });
+  if(error){
+    console.error("Error al guardar el PIN de la entrenadora:", error);
+    toast("Error al guardar el PIN");
+    return false;
+  }
+  trainerPin = newPin;
+  return true;
 }
 
 // Reemplaza TODA la fila del alumno que cambió (agregar / editar PIN).
@@ -658,6 +686,7 @@ function exportPDF(st, sortedLogs){
 /* ---------- RENDER ROUTER ---------- */
 function render(){
   if(state.view === "role") return renderRole();
+  if(state.view === "trainer-pin") return renderTrainerPin();
   if(state.view === "trainer-list") return renderTrainerList();
   if(state.view === "trainer-exercises") return renderTrainerExercises();
   if(state.view === "trainer-detail") return renderTrainerDetail();
@@ -674,8 +703,31 @@ function renderRole(){
     + '<div class="role-card" id="pick-trainer"><h3>Entrenadora</h3><div class="big">Ver alumnos y su progreso</div></div>'
     + '<div class="role-card" id="pick-student"><h3>Alumno</h3><div class="big">Cargar mi entrenamiento</div></div>'
     + '</div>';
-  document.getElementById("pick-trainer").onclick = ()=>{ state = {view:"trainer-list"}; render(); };
+  document.getElementById("pick-trainer").onclick = ()=>{ state = {view:"trainer-pin"}; render(); };
   document.getElementById("pick-student").onclick = ()=>{ state = {view:"student-select"}; render(); };
+}
+
+/* ---------- TRAINER: PIN ---------- */
+function renderTrainerPin(){
+  app.innerHTML = ''
+    + '<span class="back" id="back">&larr; Volver</span>'
+    + '<div class="top"><div><div class="tag">ENTRENADORA</div><h1>Acceso</h1></div></div>'
+    + '<div class="card pin-box">'
+    + '<div class="field"><label>Ingresá tu PIN de 4 dígitos</label><input id="pin-input" maxlength="4" inputmode="numeric" placeholder="••••"></div>'
+    + '<button class="btn wide" id="pin-submit">Ingresar</button>'
+    + '</div>';
+  document.getElementById("back").onclick = ()=>{ state = {view:"role"}; render(); };
+  const submit = ()=>{
+    const val = document.getElementById("pin-input").value.trim();
+    if(val === trainerPin){
+      state = {view:"trainer-list"};
+      render();
+    } else {
+      toast("PIN incorrecto");
+    }
+  };
+  document.getElementById("pin-submit").onclick = submit;
+  document.getElementById("pin-input").addEventListener("keydown", (e)=>{ if(e.key==="Enter") submit(); });
 }
 
 /* ---------- TRAINER: LIST ---------- */
@@ -684,7 +736,14 @@ function renderTrainerList(){
   app.innerHTML = ''
     + '<span class="back" id="back">&larr; Volver</span>'
     + '<div class="top"><div><div class="tag">ENTRENADORA</div><h1>Mis alumnos <span style="color:var(--muted);font-size:16px;">('+students.length+')</span></h1></div>'
-    + '<div style="display:flex;gap:8px;"><button class="btn ghost" id="manage-ex">Ejercicios</button><button class="btn" id="add-student">+ Nuevo alumno</button></div></div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn ghost" id="manage-ex">Ejercicios</button><button class="btn ghost" id="change-pin">Cambiar mi PIN</button><button class="btn" id="add-student">+ Nuevo alumno</button></div></div>'
+    + '<div class="card" id="pin-card" style="display:none;">'
+    + '<div class="row">'
+    + '<div class="field"><label>Nuevo PIN (4 dígitos)</label><input id="new-trainer-pin" maxlength="4" inputmode="numeric" placeholder="••••"></div>'
+    + '<div class="field"><label>Repetir PIN</label><input id="confirm-trainer-pin" maxlength="4" inputmode="numeric" placeholder="••••"></div>'
+    + '</div>'
+    + '<button class="btn" id="save-trainer-pin">Guardar nuevo PIN</button>'
+    + '</div>'
     + '<div class="card" id="add-card" style="display:none;">'
     + '<div class="row">'
     + '<div class="field"><label>Nombre y apellido</label><input id="new-name" placeholder="Ej: Juan Pérez"></div>'
@@ -705,6 +764,23 @@ function renderTrainerList(){
   document.getElementById("add-student").onclick = ()=>{
     const c = document.getElementById("add-card");
     c.style.display = c.style.display === "none" ? "block" : "none";
+  };
+  document.getElementById("change-pin").onclick = ()=>{
+    const c = document.getElementById("pin-card");
+    c.style.display = c.style.display === "none" ? "block" : "none";
+  };
+  document.getElementById("save-trainer-pin").onclick = async ()=>{
+    const p1 = document.getElementById("new-trainer-pin").value.trim();
+    const p2 = document.getElementById("confirm-trainer-pin").value.trim();
+    if(!/^\d{4}$/.test(p1)){ toast("El PIN debe tener 4 números"); return; }
+    if(p1 !== p2){ toast("Los dos PIN no coinciden"); return; }
+    const ok = await saveTrainerPin(p1);
+    if(ok){
+      toast("PIN actualizado");
+      document.getElementById("pin-card").style.display = "none";
+      document.getElementById("new-trainer-pin").value = "";
+      document.getElementById("confirm-trainer-pin").value = "";
+    }
   };
   document.getElementById("save-student").onclick = async ()=>{
     const nombre = document.getElementById("new-name").value.trim();
@@ -994,8 +1070,8 @@ async function renderStudentHome(){
     + '<div class="card"><h3 class="section-title">Cargar entrenamiento</h3>'
     + '<div class="field"><label>Fecha del entrenamiento</label><input id="session-date" type="date" value="'+state.sessionDate+'"></div>'
     + '<div class="field"><label>Elegí grupo muscular</label><div class="cat-pick">'
-    + '<div class="cat-card '+(state.category==='superior'?'active':'')+'" id="cat-superior">Miembros<br> Superiores</div>'
-    + '<div class="cat-card '+(state.category==='inferior'?'active':'')+'" id="cat-inferior">Miembros<br>Inferiores</div>'
+    + '<div class="cat-card '+(state.category==='superior'?'active':'')+'" id="cat-superior">Miembros Superiores</div>'
+    + '<div class="cat-card '+(state.category==='inferior'?'active':'')+'" id="cat-inferior">Miembros Inferiores</div>'
     + '</div></div>'
     + (state.category ? ''
         + '<div class="row" style="margin-top:16px;">'
