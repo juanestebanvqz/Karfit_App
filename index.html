@@ -315,6 +315,18 @@
     .btn{min-height:44px;padding:10px 14px;font-size:14px;touch-action:manipulation;}
     .btn.small{min-height:42px;padding:9px 12px;font-size:12px;}
     input,select,textarea{width:100%;min-width:0;min-height:44px;font-size:16px;padding:10px 12px;}
+    /* Fecha de entrenamiento: los inputs type=date tienen un ancho mínimo
+       interno que el navegador a veces respeta por encima del width:100%,
+       haciendo que se corte fuera del margen derecho. Este truco (width
+       chico + min-width:100%) fuerza a que siempre respete el ancho real
+       de su contenedor. */
+    input[type="date"]{
+      width:1px;
+      min-width:100%;
+      max-width:100%;
+      box-sizing:border-box;
+      padding:10px 8px;
+    }
     textarea{min-height:90px;}
     .row{display:flex;flex-direction:column;gap:12px;}
     .row>.field{width:100%;min-width:0;}
@@ -329,40 +341,51 @@
     .student-row{min-height:58px;padding:12px 10px;gap:8px;}
     .student-row .name{min-width:0;overflow-wrap:anywhere;}
     .meta{font-size:12px;}
-    .card:has(table){overflow:hidden;}
+    .card:has(table):not(.student-history-card){overflow:hidden;}
 
-    /* Historial Completo: ajuste fino, sin scroll horizontal en el celular. */
-    .student-history-card{overflow:hidden;}
+    /* Historial Completo: en vez de comprimir columnas (lo que hacía que
+       los botones de Editar/Borrar y los inputs se amontonaran), el
+       historial ahora scrollea de izquierda a derecha. Cada columna
+       tiene un ancho mínimo fijo para que nada se superponga. */
+    .student-history-card{
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+    }
     .student-history-card table{
-      width:100%;
-      min-width:0;
-      table-layout:fixed;
+      width:auto;
+      min-width:620px;
+      table-layout:auto;
       display:table;
-      font-size:12px;
+      font-size:12.5px;
     }
     .student-history-card th,
     .student-history-card td{
-      padding:8px 4px;
-      word-break:normal;
+      padding:10px 12px;
+      white-space:nowrap;
     }
     .student-history-card th:nth-child(1),
-    .student-history-card td:nth-child(1){width:19%;white-space:nowrap;padding-right:14px;}
+    .student-history-card td:nth-child(1){min-width:88px;}
     .student-history-card th:nth-child(2),
-    .student-history-card td:nth-child(2){width:28%;white-space:normal;overflow-wrap:break-word;word-break:normal;padding-left:8px;}
+    .student-history-card td:nth-child(2){min-width:160px;white-space:normal;overflow-wrap:break-word;}
     .student-history-card th:nth-child(3),
-    .student-history-card td:nth-child(3){width:13%;white-space:nowrap;}
+    .student-history-card td:nth-child(3){min-width:80px;}
     .student-history-card th:nth-child(4),
-    .student-history-card td:nth-child(4){width:12%;white-space:nowrap;}
+    .student-history-card td:nth-child(4){min-width:70px;}
     .student-history-card th:nth-child(5),
-    .student-history-card td:nth-child(5){width:28%;white-space:nowrap;}
-    .student-history-card .row-actions{display:flex;flex-wrap:nowrap;gap:4px;}
+    .student-history-card td:nth-child(5){min-width:150px;}
+    .student-history-card .row-actions{display:flex;flex-wrap:nowrap;gap:6px;}
     .student-history-card .icon-btn{
-      min-width:0;
-      width:calc(50% - 2px);
+      min-width:64px;
+      width:auto;
       min-height:40px;
-      padding:7px 4px;
-      font-size:11px;
+      padding:8px 10px;
+      font-size:12px;
       white-space:nowrap;
+    }
+    .student-history-card select,
+    .student-history-card .edit-input{
+      min-width:120px;
+      width:auto;
     }
 
     table{width:100%;min-width:0;font-size:12px;}
@@ -385,8 +408,6 @@
     .app{padding-left:10px;padding-right:10px;}
     .card{padding:14px;}
     .cat-pick{grid-template-columns:1fr;}
-    .student-history-card th,.student-history-card td{padding-left:3px;padding-right:3px;}
-    .student-history-card .icon-btn{font-size:10.5px;padding-left:3px;padding-right:3px;}
   }
 
 </style>
