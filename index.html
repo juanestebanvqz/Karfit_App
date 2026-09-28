@@ -401,7 +401,17 @@
     .pin-box{width:100%;max-width:100%;}
     .pin-display{font-size:24px;letter-spacing:5px;}
     .back{min-height:44px;padding:10px 4px;}
-    .toast{left:12px;right:12px;bottom:16px;text-align:center;}
+    .toast{
+  left:12px;
+  right:12px;
+  bottom:calc(16px + env(safe-area-inset-bottom, 0px));
+  transform:none;
+  width:auto;
+  max-width:none;
+  text-align:center;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
   }
 
   @media screen and (max-width:380px){
