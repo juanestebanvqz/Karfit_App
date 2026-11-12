@@ -503,7 +503,9 @@ async function loadData(){
     students = (data || []).map(r => ({
       id: r.id,
       nombre: r.nombre,
-      pin: r.pin || ""
+      // Normalizamos el PIN como texto de 4 dígitos.
+      // También recupera ceros iniciales si Supabase lo devuelve como número.
+      pin: r.pin == null ? "" : String(r.pin).trim().padStart(4, "0")
     }));
   }catch(e){
     console.error("Error cargando alumnos desde Supabase:", e);
@@ -585,17 +587,40 @@ async function loadLogs(studentId){
     return (data||[]).map(r => ({ id: r.id, fecha: r.fecha, categoria: r.categoria, ejercicio: r.ejercicio, peso: Number(r.peso), reps: Number(r.reps) }));
   }catch(e){ console.error(e); return []; }
 }
-// Sobrescribe TODO el historial del alumno con el array que le pasás:
-// borra sus filas en "registros" y vuelve a insertar arr entero.
-// Así el resto de la app (que arma el array completo y llama
-// saveLogs) no necesita saber nada de SQL.
+// Guarda o actualiza registros puntuales sin borrar el historial completo.
+// Los registros existentes conservan su ID; los nuevos se agregan mediante upsert.
 async function saveLogs(studentId, arr){
-  const { error: delErr } = await db.from("registros").delete().eq("alumno_id", studentId);
-  if(delErr){ console.error(delErr); toast("Error al guardar el registro"); return; }
-  if(!arr.length) return;
-  const rows = arr.map(l => ({ id: l.id, alumno_id: studentId, fecha: l.fecha, categoria: l.categoria || null, ejercicio: l.ejercicio, peso: l.peso, reps: l.reps }));
-  const { error } = await db.from("registros").insert(rows);
-  if(error){ console.error(error); toast("Error al guardar el registro"); }
+  if(!arr.length) return true;
+  const rows = arr.map(l => ({
+    id: l.id,
+    alumno_id: studentId,
+    fecha: l.fecha,
+    categoria: l.categoria || null,
+    ejercicio: l.ejercicio,
+    peso: l.peso,
+    reps: l.reps
+  }));
+  const { error } = await db.from("registros").upsert(rows, { onConflict: "id" });
+  if(error){
+    console.error("Error al guardar registros:", error);
+    toast("Error al guardar el registro");
+    return false;
+  }
+  return true;
+}
+
+// Elimina exclusivamente el registro elegido, nunca todo el historial.
+async function deleteLog(studentId, logId){
+  const { error } = await db.from("registros")
+    .delete()
+    .eq("alumno_id", studentId)
+    .eq("id", logId);
+  if(error){
+    console.error("Error al eliminar registro:", error);
+    toast("Error al borrar el registro");
+    return false;
+  }
+  return true;
 }
 
 async function loadMaxs(studentId){
@@ -750,7 +775,7 @@ function renderTrainerPin(){
   document.getElementById("back").onclick = ()=>{ state = {view:"role"}; render(); };
   const submit = ()=>{
     const val = document.getElementById("pin-input").value.trim();
-    if(val === trainerPin){
+    if(val.padStart(4, "0") === String(trainerPin).trim().padStart(4, "0")){
       state = {view:"trainer-list"};
       render();
     } else {
@@ -992,8 +1017,8 @@ async function renderTrainerDetail(){
   app.querySelectorAll(".del-log").forEach(btn=>{
     btn.onclick = async ()=>{
       if(!confirm("¿Borrar este registro?")) return;
-      const updated = data.filter(l=>l.id !== btn.dataset.id);
-      await saveLogs(st.id, updated);
+      const ok = await deleteLog(st.id, btn.dataset.id);
+      if(!ok) return;
       toast("Registro borrado");
       renderTrainerDetail();
     };
@@ -1060,7 +1085,7 @@ function renderStudentPin(){
   document.getElementById("back").onclick = ()=>{ state = {view:"student-select"}; render(); };
   const submit = ()=>{
     const val = document.getElementById("pin-input").value.trim();
-    if(val === st.pin){
+    if(val.padStart(4, "0") === String(st.pin).trim().padStart(4, "0")){
       state = {
         view: "student-home", studentId: st.id,
         sessionDate: new Date().toISOString().slice(0,10),
@@ -1185,8 +1210,8 @@ async function renderStudentHome(){
       );
       if(!confirmar) return;
 
-      const updated = data.filter(l => l.id !== btn.dataset.id);
-      await saveLogs(st.id, updated);
+      const ok = await deleteLog(st.id, btn.dataset.id);
+      if(!ok) return;
       state.studentEditingLogId = null;
       toast("Registro eliminado ✓");
       renderStudentHome();
